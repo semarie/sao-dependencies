@@ -1,20 +1,24 @@
 #!/bin/ksh
 set -eu
 
+umask 022
+
 base_dir=$(readlink -fn ${0%/*})
 npm_config_cache="${base_dir}/npm_cache"
 
 usage() {
-	echo "${0##*/} [-c] -o tarball"
+	echo "${0##*/} [-cs] -o tarball"
 	exit 1
 }
 
 # check arguments
 clean=false
+include_sao=false
 output=
-while getopts co: arg; do
+while getopts cso: arg; do
 	case ${arg} in
 	c)	clean=true ;;
+	s)	include_sao=true ;;
 	o)	output=${OPTARG} ;;
 	*)	usage ;;
 	esac
@@ -59,19 +63,29 @@ rm -rf -- \
 echo '[+] running npm install' >&2
 npm install --production >&2
 
-echo '[+] collecting bower components for' "${outputname}" >&2
-for dir in bower_components/* ; do
-	name="${dir##*/}"
+(
+	if [ "${include_sao}" = "true" ]; then
+		echo '[+] collecting sao for' "${outputname}" >&2
+		[ -d locale ] && echo "locale"
+		[ -d images ] && echo "images"
+		[ -d dist ] && echo "dist"
+		[ -r index.html ] && echo "index.html"
+	fi
 
-	for d in "${dir}/dist" "${dir}/min" "${dir}/build" \
-		    "${dir}/plugins" "${dir}/extensions" \
-		    ; do
-		[ -d "${d}" ] && echo "${d}"
-	done
+	echo '[+] collecting bower components for' "${outputname}" >&2
+	for dir in bower_components/* ; do
+		name="${dir##*/}"
 
-	for f in "${dir}/${name}.js" "${dir}/${name}.min.js" \
-		    "${dir}/${name}.css" "${dir}/${name}.min.css" \
-		    ; do
-		[ -r "${f}" ] && echo "${f}"
-	done
-done | xargs tar -zcf "${output}" -s "/^/${outputname}\//"
+		for d in "${dir}/dist" "${dir}/min" "${dir}/build" \
+			    "${dir}/plugins" "${dir}/extensions" \
+			    ; do
+			[ -d "${d}" ] && echo "${d}"
+		done
+
+		for f in "${dir}/${name}.js" "${dir}/${name}.min.js" \
+			    "${dir}/${name}.css" "${dir}/${name}.min.css" \
+			    ; do
+			[ -r "${f}" ] && echo "${f}"
+		done
+	done 
+) | xargs tar -zcf "${output}" -s "/^/${outputname}\//"
