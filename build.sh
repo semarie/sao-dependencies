@@ -66,7 +66,7 @@ echo '[+] running npm install' >&2
 npm install --production >&2
 
 echo '[+] running grunt' >&2
-./node_modules/grunt/bin/grunt dev uglify less >&2
+npx grunt dev uglify less >&2
 
 (
 	if [ "${include_sao}" = "true" ]; then
