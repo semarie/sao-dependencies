@@ -52,16 +52,21 @@ if [[ ! -r package.json && ! -r Gruntfile.js ]]; then
 fi
 
 # clear old stuff
-echo "[+] clearing old directories" >&2
+echo "[+] clearing old files" >&2
 rm -rf -- \
 	'./node_modules' \
-	'./bower_components'
+	'./bower_components' \
+	'./dist' \
+	'./package-lock.json'
 
 [ "${clean}" = 'true' ] && \
 	rm -rf -- "${npm_config_cache}"
 
 echo '[+] running npm install' >&2
 npm install --production >&2
+
+echo '[+] running grunt' >&2
+./node_modules/grunt/bin/grunt dev uglify less >&2
 
 (
 	if [ "${include_sao}" = "true" ]; then
