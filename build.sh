@@ -66,7 +66,16 @@ echo '[+] running npm install' >&2
 npm install --production >&2
 
 echo '[+] running grunt' >&2
-npx grunt dev uglify less >&2
+# dev:
+#   dist/tryton-sao.js
+#   src/sao.less -> dist/tryton-sao.css
+# uglify:
+#   dist/tryton-sao.js -> dist/tryton-sao.min.js
+npx grunt dev uglify >&2
+
+if [ ! -e "dist/tryton-sao.min.css" ] ; then
+	ln -s "dist/tryton-sao.css" "dist/tryton-sao.min.css"
+fi
 
 (
 	if [ "${include_sao}" = "true" ]; then
